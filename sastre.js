@@ -8,7 +8,12 @@ class Sastre {
         }
         const conjunction = Object.keys(object)[0];
         if (conjunction === 'if') {
-            if(typeof object.if === 'object') {
+            if (object.if instanceof Array) {
+                return this.eval({
+                    'and': object.if
+                });
+            }
+            else if (typeof object.if === 'object') {
                 return this.evalBranch(object.if);
             }
             else {
