@@ -3,12 +3,13 @@ class Sastre {
         this.actions = {
             'if': function (tree) {
                 if (tree instanceof Array) {
+                    // Simplified 'and' (without the 'and' key containing the array of conditions)
                     return this.eval({
                         'and': tree
                     });
                 }
                 else if (typeof tree === 'object') {
-                    return this.evalBranch(tree);
+                    return this.eval(tree);
                 }
                 else {
                     return this.check(tree);
@@ -16,49 +17,27 @@ class Sastre {
             }.bind(this),
             'and': function (tree) {
                 let allTrue = true;
-                let innerBranch;
                 for (const branch of tree) {
                     if (typeof branch === 'object') {
-                        let booleanExpression = Object.keys(branch)[0];
-                        allTrue = allTrue && this.check(booleanExpression);
-                        innerBranch = branch[booleanExpression];
+                        allTrue = this.check(allTrue) && this.eval(branch);
                     }
                     else {
                         allTrue = allTrue && this.check(branch);
                     }
                 }
-                if (innerBranch === undefined) {
-                    return allTrue;
-                }
-                else if (typeof innerBranch === 'object') {
-                    return allTrue && this.evalBranch(innerBranch);
-                }
-                else {
-                    return allTrue && innerBranch;
-                }
+                return allTrue;
             }.bind(this),
             'or': function (tree) {
                 let someTrue = false;
-                let innerBranch;
                 for (const branch of tree) {
                     if (typeof branch === 'object') {
-                        let booleanExpression = Object.keys(branch)[0];
-                        someTrue = someTrue || this.check(booleanExpression);
-                        innerBranch = branch[booleanExpression];
+                        someTrue = this.eval(branch) || this.check(someTrue);
                     }
                     else {
                         someTrue = someTrue || this.check(branch);
                     }
                 }
-                if (innerBranch === undefined) {
-                    return someTrue;
-                }
-                else if (typeof innerBranch === 'object') {
-                    return someTrue && this.evalBranch(innerBranch);
-                }
-                else {
-                    return someTrue && innerBranch;
-                }
+                return someTrue;
             }.bind(this),
             'not': function (tree) {
                 if (typeof tree === 'object') {
@@ -72,26 +51,25 @@ class Sastre {
             }.bind(this)
         };
     }
-    eval(object) {
-        if (typeof object === 'object') {
-            const conjunction = Object.keys(object)[0];
+    // Main entry point; use this function to check the result of a syntax tree
+    // Interpret a branch.
+    // It can be a tree rooted to an "and", an "or", an "if", etc, or anything below
+    eval (branch) {
+        if(typeof branch === 'object') {
+            let conjunction = Object.keys(branch)[0];
             if (typeof this.actions[conjunction] === 'function') {
-                return this.actions[conjunction](object[conjunction]);
+                return this.actions[conjunction](branch[conjunction]);
+            }
+            else {
+                let childBranch = branch[conjunction];
+                return this.check(conjunction) && this.eval(childBranch);
             }
         }
-        return object;
-    }
-    evalBranch (branch) {
-        let booleanExpression = Object.keys(branch)[0];
-        if(Object.keys(this.actions).indexOf(booleanExpression) === -1) {
-            let childBranch = branch[booleanExpression];
-            return this.check(booleanExpression) && this.eval(childBranch);
-        }
         else {
-            return this.eval(branch);
+            return branch;
         }
-
     }
+    // Check truthness of an expression
     check (expression) {
         // Default behavior, which can be overriden with checkWith()
         // Basically coerce to boolean

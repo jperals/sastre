@@ -88,11 +88,11 @@
           "or": [
             true,
             1,
-            ""
+            "",
+            {
+              "true": "'Or' inside 'and'!"
+            }
           ]
-        },
-        {
-          "true": "'Or' inside 'and'!"
         }
       ]
     }
