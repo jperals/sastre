@@ -1,0 +1,56 @@
+- if:
+    'true': Hello World!
+
+- if:
+    not:
+      'false': 'I''m not false!'
+- if:
+    and:
+      - true
+      - 1
+      - Hello
+      - 'true': All the conditions are true!
+- if:
+    and:
+      - true
+      - 1
+      - ""
+      - 'true': Now this will return false and not this message.
+- if:
+    or:
+      - true
+      - 1
+      - ""
+      - 'true': This will be true again!
+- if:
+    or:
+      - false
+      - 0
+      - ""
+      - 'false': 'This will be false again you won''t read me.'
+- if:
+    or:
+      - false
+      - 0
+      - ""
+      - and:
+          - true
+          - 1
+          - Hello
+          - 'true': '''And'' inside ''or''!'
+- if:
+    and:
+      - true
+      - 1
+      - Hello
+      - or:
+          - true
+          - 1
+          - ""
+          - 'true': '''Or'' inside ''and''!'
+- if:
+    - Truthy
+    - 1
+    - And now: 'Simplified ''and''!'
+- if: true
+  then: that

@@ -1,0 +1,26 @@
+{
+  "name": "sastre",
+  "version": "0.1.0",
+  "description": "Simple Abstract Syntax Tree Parser",
+  "main": "sastre.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "js-yaml": "^3.8.3",
+    "yamljs": "^0.2.10"
+  },
+  "devDependencies": {
+    "yamljs": "^0.2.10"
+  },
+  "scripts": {
+    "test": "node test/test.js"
+  },
+  "keywords": [
+    "AST",
+    "JSON",
+    "Yaml"
+  ],
+  "author": "Joan Perals",
+  "license": "MIT"
+}
