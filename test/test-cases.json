@@ -107,7 +107,7 @@
     ]
   },
   {
-    "if": "true",
+    "if": true,
     "then": "that"
   }
 ]
