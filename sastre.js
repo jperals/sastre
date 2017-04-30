@@ -1,18 +1,25 @@
 class Sastre {
     constructor () {
         this.actions = {
-            'if': function (tree) {
+            'if': function (tree, root) {
+                let evaluatedIf;
                 if (tree instanceof Array) {
                     // Simplified 'and' (without the 'and' key containing the array of conditions)
-                    return this.eval({
+                    evaluatedIf = this.eval({
                         'and': tree
                     });
                 }
                 else if (typeof tree === 'object') {
-                    return this.eval(tree);
+                    evaluatedIf = this.eval(tree);
                 }
                 else {
-                    return this.check(tree);
+                    evaluatedIf = this.check(tree);
+                }
+                if (root.then) {
+                    return evaluatedIf && this.eval(root.then);
+                }
+                else {
+                    return evaluatedIf;
                 }
             }.bind(this),
             'and': function (tree) {
@@ -56,9 +63,10 @@ class Sastre {
     // It can be a tree rooted to an "and", an "or", an "if", etc, or anything below
     eval (branch) {
         if(typeof branch === 'object') {
-            let conjunction = Object.keys(branch)[0];
+            const keys = Object.keys(branch);
+            const conjunction = keys[0];
             if (typeof this.actions[conjunction] === 'function') {
-                return this.actions[conjunction](branch[conjunction]);
+                return this.actions[conjunction](branch[conjunction], branch);
             }
             else {
                 let childBranch = branch[conjunction];

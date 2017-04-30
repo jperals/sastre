@@ -105,5 +105,9 @@
         "And now": "Simplified 'and'!"
       }
     ]
+  },
+  {
+    "if": "true",
+    "then": "that"
   }
 ]
