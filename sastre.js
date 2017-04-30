@@ -1,5 +1,6 @@
 class Sastre {
-    constructor () {
+    constructor (options) {
+        this.prefix = options && options.prefix || '';
         this.actions = {
             'if': function (tree, root) {
                 let evaluatedIf;
@@ -64,8 +65,9 @@ class Sastre {
     eval (branch) {
         if(typeof branch === 'object') {
             const keys = Object.keys(branch);
-            const conjunction = keys[0];
-            if (typeof this.actions[conjunction] === 'function') {
+            const firstKey = keys[0];
+            let conjunction = firstKey.startsWith(this.prefix) && firstKey.replace(this.prefix, '');
+            if (conjunction && typeof this.actions[conjunction] === 'function') {
                 return this.actions[conjunction](branch[conjunction], branch);
             }
             else {
@@ -88,8 +90,11 @@ class Sastre {
             return true;
         }
     }
-    checkWith(fn) {
+    checkWith (fn) {
         this.check = fn;
+    }
+    setPrefix (prefix) {
+        this.prefix = prefix;
     }
 }
 
