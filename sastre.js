@@ -1,82 +1,144 @@
 class Sastre {
     constructor (options) {
         this.prefix = options && options.prefix || '';
-        this.actions = {
-            'if': function (tree, root) {
-                let evaluatedIf;
-                if (tree instanceof Array) {
-                    // Simplified 'and' (without the 'and' key containing the array of conditions)
-                    evaluatedIf = this.eval({
-                        'and': tree
-                    });
-                }
-                else if (typeof tree === 'object') {
-                    evaluatedIf = this.eval(tree);
-                }
-                else {
-                    evaluatedIf = this.check(tree);
-                }
-                if (root.then) {
-                    return evaluatedIf && this.eval(root.then);
-                }
-                else {
-                    return evaluatedIf;
-                }
-            }.bind(this),
-            'and': function (tree) {
-                let allTrue = true;
-                for (const branch of tree) {
-                    if (typeof branch === 'object') {
-                        allTrue = this.check(allTrue) && this.eval(branch);
+        this.operators = {
+            // Possible content in 'if':
+            // - Truthy expression
+            // - Truthy expression with nested content
+            // - Logical operator (and, or...)
+            // - Content node (primitive)
+            // - Array of conditional content (simplified 'and')
+            'if': {
+                type: 'root',
+                parse: function (tree, root) {
+                    let parsed;
+                    if (tree instanceof Array) {
+                        // Simplified 'and' (without the 'and' key containing the array of conditions)
+                        parsed = this.parseLogic({
+                            'and': tree
+                        });
+                    }
+                    else if (typeof tree === 'object') {
+                        // Logical operator (and, or...)
+                        // or truthy expression with nested content
+                        // (parseLogic takes care of both cases)
+                        parsed = this.parseLogic(tree, true);
                     }
                     else {
-                        allTrue = allTrue && this.check(branch);
+                        // Truthy expression
+                        parsed = this.check(tree);
                     }
-                }
-                return allTrue;
-            }.bind(this),
-            'or': function (tree) {
-                let someTrue = false;
-                for (const branch of tree) {
-                    if (typeof branch === 'object') {
-                        someTrue = this.eval(branch) || this.check(someTrue);
+                    if (root.then) {
+                        return parsed && this.parseLogic(root.then);
                     }
                     else {
-                        someTrue = someTrue || this.check(branch);
+                        return parsed;
                     }
-                }
-                return someTrue;
-            }.bind(this),
-            'not': function (tree) {
-                if (typeof tree === 'object') {
-                    let booleanExpression = Object.keys(tree)[0];
-                    let innerExpression = tree[booleanExpression];
-                    return !this.check(booleanExpression) && this.eval(innerExpression);
-                }
-                else {
-                    return !this.check(tree);
-                }
-            }.bind(this)
+                }.bind(this)
+            },
+            // Possible content in an array item inside an 'and':
+            // - Truthy expression
+            // - Truthy expression with nested content
+            // - Logical operator (and, or...)
+            // - Content node (primitive)
+            'and': {
+                type: 'logical',
+                parse: function (tree) {
+                    let allTrue = true;
+                    for (const branch of tree) {
+                        allTrue = allTrue && this.parseLogic(branch, true);
+                    }
+                    return allTrue;
+                }.bind(this)
+            },
+            // Possible content in an array item inside an 'or':
+            // - Truthy expression
+            // - Truthy expression with nested content
+            // - Logical operator (and, or...)
+            // - Content node (primitive)
+            'or': {
+                type: 'logical',
+                parse: function (tree) {
+                    let someTrue = false;
+                    for (const branch of tree) {
+                        someTrue = this.parseLogic(branch, true) || someTrue;
+                    }
+                    return someTrue;
+                }.bind(this)
+            },
+            // Possible content in 'not':
+            // - Truthy expression
+            // - Truthy expression with nested content
+            // - Logical operator (and, or)
+            // - Content node (primitive)
+            'not': {
+                type: 'logical',
+                parse: function (tree) {
+                    if (typeof tree === 'object') {
+                        let booleanExpression = Object.keys(tree)[0];
+                        let innerExpression = tree[booleanExpression];
+                        return !this.check(booleanExpression) && this.parseLogic(innerExpression);
+                    }
+                    else {
+                        return !this.check(tree);
+                    }
+                }.bind(this)
+            }
         };
     }
     // Main entry point; use this function to check the result of a syntax tree
-    // Interpret a branch.
-    // It can be a tree rooted to an "and", an "or", an "if", etc, or anything below
-    eval (branch) {
-        if(typeof branch === 'object') {
-            const keys = Object.keys(branch);
-            const firstKey = keys[0];
-            let conjunction = firstKey.startsWith(this.prefix) && firstKey.replace(this.prefix, '');
-            if (conjunction && typeof this.actions[conjunction] === 'function') {
-                return this.actions[conjunction](branch[conjunction], branch);
+    // Possible content in the root:
+    // - 'if' with nested content
+    // - Content node (primitive or object)
+    parse (tree) {
+        if(typeof tree === 'object') {
+            const operatorId = this.getOperator(tree);
+            const operator = this.operators[operatorId];
+            if (operator && operator.type === 'root' && typeof operator.parse === 'function') {
+                // 'if' with nested content
+                return operator.parse(tree[operatorId], tree);
             }
             else {
-                let childBranch = branch[conjunction];
-                return this.check(conjunction) && this.eval(childBranch);
+                // Content node (object)
+                const newTree = {};
+                for(const objKey of Object.keys(tree)) {
+                    newTree[objKey] = this.parse(tree[objKey]);
+                }
+            }
+        }
+        // Content node (primitive)
+        return tree;
+    }
+    // Parse a branch that hangs from a logical operator (if, and, or, not...)
+    parseLogic (tree, check) {
+        const operatorId = this.getOperator(tree);
+        const operator = operatorId !== undefined && this.operators[operatorId];
+        if(operator && typeof operator.parse === 'function') {
+            // Nested operator
+            return operator.parse(tree[operatorId], tree);
+        }
+        else if (check) {
+            if (typeof tree === 'object') {
+                // Truthy expression with nested content
+                const expr = Object.keys(tree)[0];
+                return this.check(expr) && this.parseLogic(tree[expr]);
+            }
+            else {
+                // Truthy expression
+                return this.check(tree);
             }
         }
         else {
-            return branch;
+            // Content node (primitive or object)
+            return this.parse(tree);
+        }
+    }
+    getOperator (branch) {
+        const keys = Object.keys(branch);
+        const firstKey = keys[0];
+        const operatorMatch = firstKey !== undefined && firstKey.startsWith(this.prefix);
+        if (operatorMatch) {
+            return firstKey.replace(this.prefix, '');
         }
     }
     // Check truthness of an expression

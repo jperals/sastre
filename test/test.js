@@ -7,5 +7,5 @@ const testCases = yaml.load('./test/test-cases.yaml');
 const sastre = new Sastre();
 
 for(const testCase of testCases) {
-    console.log(sastre.eval(testCase));
+    console.log(sastre.parse(testCase));
 }
