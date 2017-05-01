@@ -67,11 +67,3 @@
     true:
       objectKey:
         objectValue
-
-# Nested 'if'; not working yet
-- if:
-    true:
-      objectKey:
-        if:
-          true:
-            something

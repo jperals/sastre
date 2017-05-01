@@ -1,3 +1,4 @@
+const assert = require('assert');
 const yaml = require('yamljs');
 const Sastre = require('../sastre.js');
 
@@ -6,6 +7,22 @@ const testCases = yaml.load('./test/test-cases.yaml');
 
 const sastre = new Sastre();
 
-for(const testCase of testCases) {
-    console.log(sastre.parse(testCase));
+const expectedResults = [
+    'Hello World!',
+    "I'm not false!",
+    'All the conditions are true!',
+    false,
+    'This will be true again!',
+    false,
+    "'And' inside 'or'!",
+    "'Or' inside 'and'!",
+    "Simplified 'and'!",
+    'that',
+    { objectKey: 'objectValue'}
+];
+
+for(let i = 0; i < testCases.length; i++) {
+    const testCase = testCases[i];
+    const result = sastre.parse(testCase);
+    assert.deepStrictEqual(result, expectedResults[i]);
 }
