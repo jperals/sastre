@@ -11,8 +11,7 @@
     "yamljs": "^0.2.10"
   },
   "devDependencies": {
-    "mocha": "^5.1.1",
-    "yamljs": "^0.2.10"
+    "mocha": "^5.1.1"
   },
   "scripts": {
     "test": "mocha test/test.js"
