@@ -1,0 +1,15 @@
+[
+  "Hello World!",
+  "I'm not false!",
+  "All the conditions are true!",
+  false,
+  "This will be true again!",
+  false,
+  "'And' inside 'or'!",
+  "'Or' inside 'and'!",
+  "Simplified 'and'!",
+  "that",
+  {
+    "objectKey": "objectValue"
+  }
+]

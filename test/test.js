@@ -6,21 +6,9 @@ const testCasesJson = require('./test-cases.json')
 // yaml.load seems to expect path relative to cwd, not to script's location
 const testCasesYaml = yaml.load('./test/test-cases.yaml');
 
-const sastre = new Sastre();
+const expectedResults = require('./expected-results')
 
-const expectedResults = [
-    'Hello World!',
-    "I'm not false!",
-    'All the conditions are true!',
-    false,
-    'This will be true again!',
-    false,
-    "'And' inside 'or'!",
-    "'Or' inside 'and'!",
-    "Simplified 'and'!",
-    'that',
-    {objectKey: 'objectValue'}
-]
+const sastre = new Sastre();
 
 describe('Sastre', function () {
     it('should interpret a set of JSON syntax trees correctly', function () {
